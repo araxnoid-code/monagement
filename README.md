@@ -23,7 +23,8 @@ any adjacent free blocks will be automatically merged to reduce fragmentation.
 ## Start
 ### Intallation
 ```toml
-monagement = { git = "" }
+[dependencies]
+monagement = { git = "https://github.com/araxnoid-code/monagement.git" }
 ```
 ### Start
 ```rust
