@@ -3,14 +3,16 @@ use crate::{Monagement, NodeStatus};
 #[test]
 // 0.0.1
 fn testing_allocating() {
+    let allocator = Monagement::init(3);
+    if let Ok(_) = allocator {
+        panic!("in version 0.0.1, the minimum size is 4.")
+    }
+
     let allocator = Monagement::init(256).expect("Init Error");
+
     let _a = allocator.allocate(50).expect("allocate a error");
     let _b = allocator.allocate(10).expect("allocate b error");
     let _c = allocator.allocate(20).expect("allocate c error");
-    let _d = allocator.allocate(3);
-    if let Ok(_) = _d {
-        panic!("in version 0.0.1, the minimum size is 4.")
-    }
 
     let allocator_core = allocator.borrow_core();
     // block 0

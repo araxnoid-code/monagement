@@ -30,7 +30,7 @@ monagement = { git = "" }
 use monagement::Monagement;
 
 fn main() {
-    let allocator = Monagement::init(3).expect("Monagement Init Error");
+    let allocator = Monagement::init(256).expect("Monagement Init Error");
 
     // allocate memory
     let allocate_a = allocator.allocate(12).expect("Memory Allocation A Error");
