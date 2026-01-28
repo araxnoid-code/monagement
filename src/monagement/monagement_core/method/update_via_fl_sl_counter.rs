@@ -1,6 +1,6 @@
 use crate::monagement::{
     monagement_core::MonagementCore,
-    node_core::{NodeStatus, Sl_Idx},
+    node_core::{NodeStatus, SlIdx},
 };
 
 impl MonagementCore {
@@ -31,7 +31,7 @@ impl MonagementCore {
                 .unwrap()
                 .as_mut()
                 .unwrap()
-                .status = NodeStatus::Free(fl, sl, Sl_Idx(sl_index));
+                .status = NodeStatus::Free(fl, sl, SlIdx(sl_index));
 
             self.update_counter = None;
         }

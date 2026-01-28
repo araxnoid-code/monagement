@@ -4,6 +4,7 @@ use crate::monagement::MonagementCore;
 
 mod method;
 
+#[derive(Debug)]
 pub struct Allocated {
     pub(crate) module: Option<Rc<RefCell<MonagementCore>>>,
     pub size: u32,

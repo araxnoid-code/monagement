@@ -2,7 +2,7 @@ use crate::monagement::{
     MonagementCore,
     allocated::Allocated,
     get_fl_sl,
-    node_core::{NodeStatus, Sl_Idx},
+    node_core::{NodeStatus, SlIdx},
 };
 
 impl MonagementCore {
@@ -148,7 +148,7 @@ impl MonagementCore {
             .ok_or("Allocated Link Not Found")?
             .as_mut()
             .ok_or("The Link points To An Empty Location")?
-            .status = NodeStatus::Free(fl, sl, Sl_Idx(sl_idx));
+            .status = NodeStatus::Free(fl, sl, SlIdx(sl_idx));
 
         Ok(())
     }

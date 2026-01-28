@@ -1,7 +1,7 @@
 mod monagement_core;
+mod test;
 use std::{
     cell::{Ref, RefCell},
-    ops::Deref,
     rc::Rc,
 };
 
@@ -12,6 +12,7 @@ use crate::monagement::{allocated::Allocated, monagement_core::MonagementCore};
 mod allocated;
 mod level_core;
 mod node_core;
+pub use node_core::*;
 
 pub struct Monagement {
     core: Rc<RefCell<MonagementCore>>,

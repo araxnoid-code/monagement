@@ -14,6 +14,9 @@ impl MonagementCore {
             );
 
             return Err(msg);
+        } else if size < 4 {
+            let msg = format!("minimum size is 4");
+            return Err(msg);
         }
 
         let minimum_size = self.minimum_size;

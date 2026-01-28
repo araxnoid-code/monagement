@@ -1,7 +1,7 @@
 use crate::monagement::{
     level_core::{FirstLevel, SecondLevel},
     monagement_core::MonagementCore,
-    node_core::{Node, NodeStatus, Sl_Idx},
+    node_core::{Node, NodeStatus, SlIdx},
 };
 
 impl MonagementCore {
@@ -45,7 +45,7 @@ impl MonagementCore {
         let node = Node {
             index: 0,
             size: max_size,
-            status: NodeStatus::Free(fl_indexing, sl_indexing, Sl_Idx(0)),
+            status: NodeStatus::Free(fl_indexing, sl_indexing, SlIdx(0)),
             back: None,
             front: None,
         };
