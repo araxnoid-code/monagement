@@ -4,8 +4,12 @@ use crate::monagement::{
     node_core::{Node, NodeStatus, SlIdx},
 };
 
+// pub struct MonagementInit {
+//     minimum: u
+// }
+
 impl MonagementCore {
-    pub fn init(max_size: u32) -> Result<Self, &'static str> {
+    pub fn init(max_size: u64) -> Result<Self, &'static str> {
         if max_size < 4 {
             return Err("Minimum Size Is 4");
         }

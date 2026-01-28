@@ -19,13 +19,13 @@ pub struct Monagement {
 }
 
 impl Monagement {
-    pub fn init(max_size: u32) -> Result<Self, String> {
+    pub fn init(max_size: u64) -> Result<Self, String> {
         Ok(Self {
             core: Rc::new(RefCell::new(MonagementCore::init(max_size)?)),
         })
     }
 
-    pub fn allocate(&self, size: u32) -> Result<allocated::Allocated, String> {
+    pub fn allocate(&self, size: u64) -> Result<allocated::Allocated, String> {
         let mut allocated = self.core.borrow_mut().allocate(size)?;
         allocated.module = Some(self.core.clone());
 

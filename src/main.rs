@@ -1,4 +1,8 @@
+use monagement::Monagement;
+
 fn main() {
+    let monagement = Monagement::init(256);
+
     // let target: u32 = 7;
     // let minimum = 2; // 2^2
     // let fl = 31 - target.leading_zeros();

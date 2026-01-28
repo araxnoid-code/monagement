@@ -3,7 +3,7 @@ pub struct SlIdx(pub usize);
 
 #[derive(Debug)]
 pub enum NodeStatus {
-    Free(u32, u32, SlIdx),
+    Free(u64, u64, SlIdx),
     Used,
 }
 
@@ -11,7 +11,7 @@ pub enum NodeStatus {
 pub struct Node {
     pub(crate) index: usize,
     pub(crate) status: NodeStatus,
-    pub(crate) size: u32,
+    pub(crate) size: u64,
     pub(crate) back: Option<usize>,
     pub(crate) front: Option<usize>,
 }
@@ -25,7 +25,7 @@ impl Node {
         &self.status
     }
 
-    pub fn get_size(&self) -> u32 {
+    pub fn get_size(&self) -> u64 {
         self.size
     }
 

@@ -6,7 +6,7 @@ use crate::monagement::{
 };
 
 impl MonagementCore {
-    pub fn allocate(&mut self, size: u32) -> Result<Allocated, String> {
+    pub fn allocate(&mut self, size: u64) -> Result<Allocated, String> {
         if size > self.max_size {
             let msg = format!(
                 "The allocator cannot accommodate data with size {} because the maximum capacity of the allocator is {}",
