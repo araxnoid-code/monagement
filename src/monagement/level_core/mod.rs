@@ -1,7 +1,7 @@
 #[derive(Clone, Debug)]
 pub(crate) struct FirstLevel {
     pub(crate) count: u64,
-    pub(crate) bitmap: i32,
+    pub(crate) bitmap: u64,
     pub(crate) sl_list: Vec<SecondLevel>,
 }
 

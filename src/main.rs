@@ -5,25 +5,20 @@ use rand::random;
 
 fn main() {
     let allocator = Monagement::init(MonagementInit {
-        start: 3,
-        maximum: 100,
+        start: 2,
+        maximum: 256,
     })
-    .unwrap();
+    .expect("Init Error");
 
-    // unsafe {
-    //     allocator
-    //         .borrow_core()
-    //         ._allocate(NonZeroU64::new_unchecked(32))
-    //         .unwrap();
-    // };
+    let _a = allocator
+        .allocate(NonZeroU64::new(50).unwrap())
+        .expect("allocate a error");
+    let _b = allocator
+        .allocate(NonZeroU64::new(10).unwrap())
+        .expect("allocate b error");
+    // let _c = allocator
+    //     .allocate(NonZeroU64::new(20).unwrap())
+    //     .expect("allocate c error");
 
-    let mut map: u64 = 0b01100100101;
-    loop {
-        let idx = map.trailing_zeros();
-        if idx == 64 {
-            break;
-        }
-        println!("{}", idx);
-        map &= map - 1;
-    }
+    println!("{:#?}", allocator.borrow_core());
 }
