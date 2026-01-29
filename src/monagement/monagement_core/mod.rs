@@ -38,4 +38,8 @@ impl MonagementCore {
     pub fn bitmap(&self) -> u64 {
         self.bitmap
     }
+
+    pub fn get_max_size(&self) -> u64 {
+        self.max_size
+    }
 }

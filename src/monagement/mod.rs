@@ -50,4 +50,8 @@ impl Monagement {
     pub fn get_core(&self) -> &Rc<RefCell<MonagementCore>> {
         &self.core
     }
+
+    pub fn get_max_size(&self) -> u64 {
+        self.borrow_core().get_max_size()
+    }
 }
