@@ -27,15 +27,8 @@ impl Monagement {
         })
     }
 
-    pub fn _allocate(&self, size: NonZeroU64) -> Result<allocated::Allocated, String> {
-        let mut allocated = self.core.borrow_mut().allocate(size)?;
-        allocated.module = Some(self.core.clone());
-
-        Ok(allocated)
-    }
-
     pub fn allocate(&self, size: NonZeroU64) -> Result<allocated::Allocated, String> {
-        let mut allocated = self.core.borrow_mut()._allocate(size)?;
+        let mut allocated = self.core.borrow_mut().allocate(size)?;
         allocated.module = Some(self.core.clone());
 
         Ok(allocated)
