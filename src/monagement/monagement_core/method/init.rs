@@ -1,24 +1,26 @@
 use crate::monagement::{
     level_core::{FirstLevel, SecondLevel},
-    monagement_core::MonagementCore,
+    monagement_core::{MonagementCore, init::MonagementInit},
     node_core::{Node, NodeStatus, SlIdx},
 };
 
-// pub struct MonagementInit {
-//     minimum: u
-// }
-
 impl MonagementCore {
-    pub fn init(max_size: u64) -> Result<Self, &'static str> {
-        if max_size < 4 {
-            return Err("Minimum Size Is 4");
+    pub fn init(monagement_init: MonagementInit) -> Result<Self, String> {
+        let max_size = monagement_init.get_maximum();
+        let start = monagement_init.get_minimum();
+        let start_raw = monagement_init.get_raw_minimum();
+
+        if max_size < start {
+            let msg = format!("Error, Allocator Minimum Size Is {}", start);
+            return Err(msg);
         }
 
         let mut monagement = Self {
             max_size,
             bitmap: 0,
-            minimum_size: 4,
-            second_level_count: 4,
+            minimum_size: start,
+            minimum_size_raw: start_raw,
+            second_level_count: start,
             fl_list: vec![],
             linked_list: Vec::with_capacity(1),
             free_linked_list_index: vec![],
@@ -39,7 +41,7 @@ impl MonagementCore {
         let first_level = FirstLevel {
             count: 0,
             bitmap: 0,
-            sl_list: vec![second_level; 4],
+            sl_list: vec![second_level; start as usize],
         };
 
         monagement.bitmap = 1 << fl_indexing;

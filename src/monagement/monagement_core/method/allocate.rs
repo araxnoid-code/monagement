@@ -1,3 +1,5 @@
+use std::num::{NonZero, NonZeroU64};
+
 use crate::monagement::{
     allocated::Allocated,
     get_fl_sl,
@@ -6,7 +8,8 @@ use crate::monagement::{
 };
 
 impl MonagementCore {
-    pub fn allocate(&mut self, size: u64) -> Result<Allocated, String> {
+    pub fn allocate(&mut self, size: NonZeroU64) -> Result<Allocated, String> {
+        let size = size.get();
         if size > self.max_size {
             let msg = format!(
                 "The allocator cannot accommodate data with size {} because the maximum capacity of the allocator is {}",
@@ -31,7 +34,7 @@ impl MonagementCore {
             }
 
             let first_level = &mut self.fl_list[fl_idx];
-            for sl_idx in sl_start..4 {
+            for sl_idx in sl_start..self.second_level_count {
                 let second_map = (first_level.bitmap >> sl_idx) & 1;
                 if second_map == 0 {
                     continue;
@@ -124,7 +127,12 @@ impl MonagementCore {
                         }
 
                         // get new fl sl
-                        let (new_fl, new_sl) = get_fl_sl(rest, minimum_size, second_level_count);
+                        let (new_fl, new_sl) = get_fl_sl(
+                            rest,
+                            minimum_size,
+                            second_level_count,
+                            self.minimum_size_raw,
+                        );
 
                         // update map
                         if fl != new_fl {
@@ -166,11 +174,29 @@ impl MonagementCore {
             self.update_via_fl_sl_counter();
             Ok(Allocated {
                 module: None,
+                allocated: true,
                 size,
                 link: link,
             })
         } else {
             Err("error, unable to allocate memory".to_string())
         }
+    }
+
+    pub fn _allocate(&self, size: NonZeroU64) -> Result<(), String> {
+        let target = size.get();
+        let (fl_target, sl_target) = self.get_fl_sl(target);
+        if target > self.max_size {
+            let msg = format!(
+                "The allocator cannot accommodate data with size {} because the maximum capacity of the allocator is {}",
+                size, self.max_size
+            );
+
+            return Err(msg);
+        }
+
+        println!("{:b}", self.bitmap);
+
+        Ok(())
     }
 }

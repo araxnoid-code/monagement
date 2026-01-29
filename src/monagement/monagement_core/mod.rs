@@ -1,3 +1,5 @@
+mod init;
+pub use init::MonagementInit;
 mod method;
 
 use std::{cell::RefCell, rc::Rc};
@@ -9,6 +11,7 @@ pub struct MonagementCore {
     pub(crate) max_size: u64,
     pub(crate) bitmap: u64,
     pub(crate) minimum_size: u64,
+    pub(crate) minimum_size_raw: u64,
     pub(crate) second_level_count: u64,
     pub(crate) fl_list: Vec<FirstLevel>,
     pub(crate) linked_list: Vec<Option<Node>>,

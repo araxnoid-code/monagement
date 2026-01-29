@@ -7,6 +7,7 @@ mod method;
 #[derive(Debug)]
 pub struct Allocated {
     pub(crate) module: Option<Rc<RefCell<MonagementCore>>>,
+    pub(crate) allocated: bool,
     pub size: u64,
     pub(crate) link: usize,
 }

@@ -7,6 +7,7 @@ use crate::monagement::{
 
 impl MonagementCore {
     pub fn free(&mut self, allocated: &Allocated) -> Result<(), &str> {
+        // println!("{}", "caall");
         let link = allocated.link;
         let mut free_size = 0;
         let mut update_back_link = None;
@@ -89,7 +90,12 @@ impl MonagementCore {
                 .as_mut()
                 .ok_or("The Link points To An Empty Location")?;
             node.size += free_size;
-            let (fl, sl) = get_fl_sl(node.size, self.minimum_size, self.second_level_count);
+            let (fl, sl) = get_fl_sl(
+                node.size,
+                self.minimum_size,
+                self.second_level_count,
+                self.minimum_size_raw,
+            );
 
             if let Some(back) = update_back_link {
                 node.back = back;
@@ -149,6 +155,57 @@ impl MonagementCore {
             .as_mut()
             .ok_or("The Link points To An Empty Location")?
             .status = NodeStatus::Free(fl, sl, SlIdx(sl_idx));
+
+        Ok(())
+    }
+
+    pub fn free_(&mut self, allocated: &Allocated) -> Result<(), &str> {
+        let allocated_link = allocated.link;
+        let allocated_node = self
+            .linked_list
+            .get(allocated_link)
+            .ok_or("Error, failed to access allocated")?
+            .as_ref()
+            .ok_or("The Link points To An Empty Location")?;
+
+        // Coalescing
+        let mut free_size = allocated_node.size;
+        // let mut back_coalescing_handler = None;
+        if let Some(back_link) = allocated_node.back {
+            let allocated_back = self
+                .linked_list
+                .get(back_link)
+                .ok_or("Error, failed to access back allocation")?
+                .as_ref()
+                .ok_or(
+                    "Error, back allocation access failed because allocation block value is 'None'",
+                )?;
+
+            if let NodeStatus::Free(fl, sl, sl_idx) = &allocated_back.status {
+                free_size += allocated_back.size;
+
+                // clean allocation in first level and second level
+                // // update first_level
+                let first_level = self.fl_list.get_mut(*fl as usize).unwrap();
+                first_level.count -= 1;
+                if first_level.count == 0 {
+                    self.bitmap &= !(1 << fl);
+                }
+
+                // // update second_level
+                let second_level = first_level.sl_list.get_mut(*sl as usize).unwrap();
+                second_level.count -= 1;
+                if second_level.count == 0 {
+                    first_level.bitmap &= !(1 << sl);
+                }
+
+                // // remove block
+                second_level.link[sl_idx.0] = None;
+                second_level.free_link_idx.push(sl_idx.0);
+            }
+        }
+
+        println!("{:#?}", allocated_node);
 
         Ok(())
     }

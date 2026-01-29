@@ -1,18 +1,27 @@
-use crate::{Monagement, NodeStatus};
+use std::num::NonZeroU64;
+
+use rand::random;
+
+use crate::{Monagement, NodeStatus, monagement::monagement_core::MonagementInit};
 
 #[test]
-// 0.0.1
+
 fn testing_allocating() {
-    let allocator = Monagement::init(3);
-    if let Ok(_) = allocator {
-        panic!("in version 0.0.1, the minimum size is 4.")
-    }
+    let allocator = Monagement::init(MonagementInit {
+        maximum: 256,
+        start: 2,
+    })
+    .expect("Init Error");
 
-    let allocator = Monagement::init(256).expect("Init Error");
-
-    let _a = allocator.allocate(50).expect("allocate a error");
-    let _b = allocator.allocate(10).expect("allocate b error");
-    let _c = allocator.allocate(20).expect("allocate c error");
+    let _a = allocator
+        .allocate(NonZeroU64::new(50).unwrap())
+        .expect("allocate a error");
+    let _b = allocator
+        .allocate(NonZeroU64::new(10).unwrap())
+        .expect("allocate b error");
+    let _c = allocator
+        .allocate(NonZeroU64::new(20).unwrap())
+        .expect("allocate c error");
 
     let allocator_core = allocator.borrow_core();
     // block 0
@@ -106,4 +115,86 @@ fn testing_allocating() {
         assert_eq!(id, 2);
     }
     // block 3
+}
+
+fn testing() {
+    let monagement = Monagement::init(MonagementInit {
+        start: 2,
+        maximum: 262144,
+    })
+    .unwrap();
+
+    for i in 0..100000 {
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        println!("iter {} done", i);
+    }
 }
