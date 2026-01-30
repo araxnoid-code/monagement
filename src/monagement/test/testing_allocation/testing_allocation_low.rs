@@ -1,5 +1,7 @@
 use std::num::NonZeroU64;
 
+use rand::random;
+
 use crate::{Monagement, MonagementInit, NodeStatus};
 
 #[test]
@@ -266,4 +268,94 @@ fn testing_allocating_medium() {
             .sum::<u64>();
         assert_eq!(sum, allocator.borrow_core().get_max_size());
     }
+}
+
+#[test]
+fn allocating_free_stress() {
+    let maximum = 16777216;
+    let monagement = Monagement::init(MonagementInit { start: 3, maximum }).unwrap();
+
+    for i in 0..1000 {
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+
+        let size = random::<u16>() as u64;
+        let a = if size > 0 {
+            let drop_stat = rand::random_bool(0.5);
+            let a = monagement.allocate(NonZeroU64::new(size).unwrap()).unwrap();
+            if drop_stat {
+                a.free().unwrap();
+                None
+            } else {
+                Some(a)
+            }
+        } else {
+            None
+        };
+    }
+
+    let size = monagement
+        .borrow_core()
+        .get_linked_list()
+        .iter()
+        .find(|node| if let Some(_) = node { true } else { false })
+        .expect("free node not found")
+        .as_ref()
+        .unwrap()
+        .get_size();
+
+    assert_eq!(maximum, size);
 }

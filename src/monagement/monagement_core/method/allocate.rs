@@ -1,6 +1,4 @@
-use std::num::{NonZero, NonZeroU64};
-
-use rand::seq::index;
+use std::num::NonZeroU64;
 
 use crate::monagement::{
     allocated::Allocated,
@@ -169,7 +167,10 @@ impl MonagementCore {
                 link: link,
             })
         } else {
-            Err("error, unable to allocate memory".to_string())
+            Err(format!(
+                "Allocation Error, not finding a node that can be allocated for data of size {}",
+                size
+            ))
         }
     }
 }
