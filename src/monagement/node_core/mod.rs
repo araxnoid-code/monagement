@@ -1,7 +1,7 @@
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct SlIdx(pub usize);
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NodeStatus {
     Free(u64, u64, SlIdx),
     Used,

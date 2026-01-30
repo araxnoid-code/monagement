@@ -115,7 +115,7 @@ fn testing_allocating_low() {
 }
 
 #[test]
-fn testing_allocator_medium() {
+fn testing_allocating_medium() {
     let allocator = Monagement::init(MonagementInit {
         start: 5,
         maximum: 16384,
