@@ -1,16 +1,8 @@
 use crate::monagement::allocated::Allocated;
 
 impl Allocated {
-    pub fn free(self) -> Result<(), String> {
+    pub fn free(self) {
         drop(self);
-
-        // self.module
-        //     .as_ref()
-        //     .ok_or("freeing memory failed because module is not defined")?
-        //     .borrow_mut()
-        //     .free(&self)?;
-
-        Ok(())
     }
 }
 

@@ -54,6 +54,8 @@ impl MonagementCore {
             status: NodeStatus::Free(fl_indexing, sl_indexing, SlIdx(0)),
             back: None,
             front: None,
+            start: 0,
+            end: max_size,
         };
 
         // first level

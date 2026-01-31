@@ -1,5 +1,3 @@
-use std::num::NonZeroI64;
-
 use crate::monagement::{
     MonagementCore,
     allocated::Allocated,
@@ -7,7 +5,7 @@ use crate::monagement::{
 };
 
 impl MonagementCore {
-    pub fn free(&mut self, allocated: &Allocated) -> Result<(), String> {
+    pub(crate) fn free(&mut self, allocated: &Allocated) -> Result<(), String> {
         let link = allocated.link;
         // handler
         let allocated_node_index;
@@ -15,6 +13,8 @@ impl MonagementCore {
         let mut new_front_link = None;
         let mut new_back_link = None;
         let new_status;
+        let mut new_start = None;
+        let mut new_end = None;
         {
             // allocated node
             let allocated_node = self
@@ -42,11 +42,15 @@ impl MonagementCore {
                 .ok_or("Free Error | Coalescing Error, index front link points to a node with a value of None")?;
 
                 if let NodeStatus::Free(fl, sl, sl_idx) = &front_node.status {
+                    // update handler
                     new_front_link = Some(front_node.front);
+                    new_start = Some(front_node.start);
 
+                    // update size
                     let index = front_node.index;
                     size += front_node.size;
 
+                    // clean node
                     self.clean_free_node_in_fl_sl(*fl as usize, *sl as usize, sl_idx.0)?;
                     self.clean_node_in_linked_list_unchecked(index);
                 }
@@ -63,11 +67,15 @@ impl MonagementCore {
                 .ok_or("Free Error | Coalescing Error, index back link points to a node with a value of None in linked list")?;
 
                 if let NodeStatus::Free(fl, sl, sl_idx) = &back_node.status {
+                    // update handler
                     new_back_link = Some(back_node.back);
+                    new_end = Some(back_node.end);
 
+                    // update size
                     let index = back_node.index;
                     size += back_node.size;
 
+                    // clean node
                     self.clean_free_node_in_fl_sl(*fl as usize, *sl as usize, sl_idx.0)?;
                     self.clean_node_in_linked_list_unchecked(index);
                 }
@@ -147,6 +155,14 @@ impl MonagementCore {
 
         if let Some(back_link) = new_back_link {
             allocated_node.back = back_link;
+        }
+
+        if let Some(n_start) = new_start {
+            allocated_node.start = n_start;
+        }
+
+        if let Some(n_end) = new_end {
+            allocated_node.end = n_end;
         }
 
         Ok(())

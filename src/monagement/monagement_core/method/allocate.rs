@@ -37,14 +37,12 @@ impl MonagementCore {
                 fl_idx
             ))?;
 
-            // println!("{:b}", !((1 << sl_target) - 1));
             let mut mask_second_level_map = if searching_from_zero {
                 first_level.bitmap & !((1 << sl_target) - 1)
             } else {
                 first_level.bitmap
             };
 
-            // println!("{}", searching_from_zero);
             loop {
                 let sl_idx = mask_second_level_map.trailing_zeros() as u64;
                 if sl_idx == 64 {
@@ -96,6 +94,7 @@ impl MonagementCore {
                             // get metadata for new used node
                             let back_node_link = Some(free_node.index);
                             let front_node_link = free_node.front;
+                            let offset = free_node.start;
                             let (used_node_idx, push_handler) =
                                 if let Some(idx) = self.free_linked_list_index.pop() {
                                     (idx, true)
@@ -110,6 +109,8 @@ impl MonagementCore {
                                 status: NodeStatus::Used,
                                 back: back_node_link,
                                 front: front_node_link,
+                                start: offset,
+                                end: offset + target,
                             };
 
                             // enter node into linked list
@@ -138,6 +139,7 @@ impl MonagementCore {
                                 fl_idx,
                                 sl_idx,
                                 link_i,
+                                offset + target,
                             ));
 
                             allocated_link_handler = Some(used_node_idx);
@@ -157,15 +159,19 @@ impl MonagementCore {
             if let Some(handler) = update_free_node_handler {
                 self.update_free_node(
                     handler.0, handler.1, handler.2, handler.3, handler.4, handler.5, handler.6,
+                    handler.7,
                 )?;
-            };
 
-            Ok(Allocated {
-                module: None,
-                allocated: true,
-                size: target,
-                link: link,
-            })
+                Ok(Allocated {
+                    module: None,
+                    size: target,
+                    start: handler.7 - target,
+                    end: handler.7,
+                    link: link,
+                })
+            } else {
+                Err(format!("Allocation Error, Update Free Node Error"))
+            }
         } else {
             Err(format!(
                 "Allocation Error, not finding a node that can be allocated for data of size {}",

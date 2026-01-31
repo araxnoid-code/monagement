@@ -10,6 +10,7 @@ impl MonagementCore {
         fl: u64,
         sl: u64,
         link_idx: usize,
+        start: u64,
     ) -> Result<(), String> {
         let first_level = self.fl_list.get_mut(fl as usize).ok_or(format!(
             "Error, The first level with index {} does not exist",
@@ -38,6 +39,7 @@ impl MonagementCore {
                 link_idx
             ))?;
 
+        free_node.start = start;
         if let Some(new_idx) = index {
             free_node.index = new_idx;
         }
