@@ -1,5 +1,5 @@
 use crate::monagement::{
-    level_core::{FirstLevel, SecondLevel},
+    level_core::{FirstLevel, SecondLevel, SecondLevelLink},
     monagement_core::{MonagementCore, init::MonagementInit},
     node_core::{Node, NodeStatus, SlIdx},
 };
@@ -32,7 +32,11 @@ impl MonagementCore {
             count: 0,
             link: vec![],
             free_link_idx: vec![],
-            direct_node: None,
+            // update
+            head_link_list: None,
+            bottom_link_list: None,
+            link_list: vec![],
+            free_link_list: vec![],
         };
 
         let first_level_len = fl_indexing + 1;
@@ -64,11 +68,21 @@ impl MonagementCore {
         // second level
         let second_level = &mut first_level.sl_list[sl_indexing as usize];
         second_level.count += 1;
-        second_level.direct_node = Some((0, max_size));
 
         second_level.link = vec![Some(0)];
-
         monagement.linked_list.push(Some(node));
+
+        // update linked list link
+        let second_level_link = SecondLevelLink {
+            index: 0,
+            node_link: 0,
+            back: None,
+            front: None,
+        };
+        second_level.head_link_list = Some(0);
+        second_level.bottom_link_list = Some(0);
+        second_level.link_list.push(Some(second_level_link));
+        // update linked list link
 
         Ok(monagement)
     }

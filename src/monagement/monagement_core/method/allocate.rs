@@ -18,8 +18,13 @@ impl MonagementCore {
 
             return Err(msg);
         }
+        // handler
         let mut allocated_link_handler = None;
         let mut update_free_node_handler = None;
+        let mut free_node_idx = None;
+        let mut new_front_link = None;
+        let mut new_size = None;
+        let mut new_start = None;
 
         // searching in first_level
         let mut mask_first_level_map = self.bitmap & !((1 << fl_target) - 1);
@@ -55,72 +60,40 @@ impl MonagementCore {
                     sl_idx, fl_idx
                 ))?;
 
-                // match self.selector_option {
-                //     SelectorOpt::DIRECT => {
-                //         let mut free_node = None;
-                //         let direct_node = second_level
-                //             .direct_node.and_then(|direct|
-                //                 if direct.1 >= target {
-                //                     Some(direct)
-                //                 } else {
-                //                     None
-                //                 })
-                //             .or_else(|| {
-                //                 for (link_i, free_node_idx) in second_level.link.iter().enumerate()
-                //                 {
-                //                     if let Some(idx) = free_node_idx {
-                //                         let node = self.linked_list
-                //                             .get_mut(*idx)
-                //                             .expect("Error, Direct Selector. index link points to a non-existent node in the linked_list")
-                //                             .as_mut()
-                //                             .expect("Error, Direct Selector. link index points to an unallocated node address that has status None");
-                //                         let direct  = Some((link_i, node.size));
-                //                         free_node = Some(node);
-                //                         return direct;
-                //                     } else {
-                //                         continue;
-                //                     }
-                //                 }
-                //                 None
-                //             });
+                // update linked list link
+                // SELECTOR(SCANNER)
+                if let (Some(head_idx), Some(bottom_idx)) =
+                    (second_level.head_link_list, second_level.bottom_link_list)
+                {
+                    let mut second_link_list_idx = head_idx;
+                    loop {
+                        // get first second level linked list
+                        let second_link_list = second_level.link_list
+                            .get(second_link_list_idx)
+                            .ok_or("Error, Scanning Selector. index points to a non-existent node in the linked_list in second level")?
+                            .as_ref()
+                            .ok_or("Error, Scanning Selector. index points to an unallocated node address that has status None in second level")?;
+                        let link_idx = second_link_list.node_link;
 
-                //         let free_node = if let Some((direct_idx, _)) = direct_node {
-                //             self.linked_list.get_mut(direct_idx)
-                //                 .ok_or(format!(
-                //                 "Error, Scanning Selector. index link points to a non-existent node in the linked_list"))?
-                //                 .as_mut()
-                //                 .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?
-                //         } else if let Some(free_node) = free_node {
-                //             free_node
-                //         } else {
-                //             continue;
-                //         };
+                        // get node
+                        let free_node = self.linked_list
+                            .get_mut(link_idx)
+                            .ok_or("Error, Scanning Selector. index link points to a non-existent node in the linked_list")?
+                            .as_mut()
+                            .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?;
+                        free_node_idx = Some(link_idx);
 
-                //         // let free_node = if let Some(free_node) = free_node {
-                //         //     free_node
-                //         // } else {
-                //         //     self.linked_list.get_mut(direct_idx)
-                //         //         .ok_or(format!(
-                //         //         "Error, Scanning Selector. index link points to a non-existent node in the linked_list"))?
-                //         //         .as_mut()
-                //         //         .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?
-                //         // };
-                //     }
-                //     SelectorOpt::SCANNING => {}
-                // }
+                        if free_node.size < target {
+                            if let Some(front_idx) = second_link_list.front {
+                                // next linked
+                                second_link_list_idx = front_idx;
+                                continue;
+                            } else {
+                                // end of linked list
+                                break;
+                            }
+                        }
 
-                for (link_i, free_node_idx) in second_level.link.iter().enumerate() {
-                    let free_node = if let Some(idx) = free_node_idx {
-                        self.linked_list.get_mut(*idx).ok_or(format!(
-                            "Error, Scanning Selector. index link points to a non-existent node in the linked_list"
-                        ))?.
-                        as_mut().
-                        ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?
-                    } else {
-                        continue;
-                    };
-
-                    if free_node.size >= target {
                         let mut rest = free_node.size - target;
                         if rest < self.minimum_size {
                             rest = 0;
@@ -129,19 +102,77 @@ impl MonagementCore {
                         if rest == 0 {
                             // update node
                             free_node.status = NodeStatus::Used;
+
                             // allocated link
                             allocated_link_handler = Some(free_node.index);
 
                             // update level
                             // // second_level
-                            second_level.link[link_i] = None;
-                            second_level.free_link_idx.push(link_i);
+                            // // // linked_list
+                            let front_link_list = second_link_list.front;
+                            let back_link_list = second_link_list.back;
+                            let second_level_link_idx = second_link_list.index;
+
+                            second_level.link_list[second_level_link_idx] = None;
+                            second_level.free_link_list.push(second_level_link_idx);
+
+                            if second_level_link_idx == head_idx
+                                && second_level_link_idx == bottom_idx
+                            {
+                                second_level.head_link_list = None;
+                                second_level.bottom_link_list = None;
+                            } else if second_level_link_idx == head_idx {
+                                second_level.head_link_list = front_link_list;
+                                if let Some(front_idx) = front_link_list {
+                                    let front_node = second_level
+                                        .link_list
+                                        .get_mut(front_idx)
+                                        .ok_or("Error, Update Head Front Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Head Front Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    front_node.back = None;
+                                }
+                            } else if second_level_link_idx == bottom_idx {
+                                second_level.bottom_link_list = back_link_list;
+                                if let Some(back_idx) = back_link_list {
+                                    let back_node = second_level
+                                        .link_list
+                                        .get_mut(back_idx)
+                                        .ok_or("Error, Update Bottom Back Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Bottom Back Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    back_node.front = None;
+                                }
+                            } else {
+                                if let Some(front_idx) = front_link_list {
+                                    let front_node = second_level
+                                        .link_list
+                                        .get_mut(front_idx)
+                                        .ok_or("Error, Update Front Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Front Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    front_node.back = back_link_list;
+                                }
+
+                                if let Some(back_idx) = back_link_list {
+                                    let back_node = second_level
+                                        .link_list
+                                        .get_mut(back_idx)
+                                        .ok_or("Error, Update Back Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Back Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    back_node.front = front_link_list;
+                                }
+                            }
+
+                            // // // bitmap counter
                             second_level.count -= 1;
                             if second_level.count == 0 {
                                 first_level.bitmap &= !(1 << sl_idx);
                             }
 
                             // // first level
+                            // // // bitmap counter
                             first_level.count -= 1;
                             if first_level.count == 0 {
                                 self.bitmap &= !(1 << fl_idx);
@@ -157,6 +188,9 @@ impl MonagementCore {
                                 } else {
                                     (self.linked_list.len(), false)
                                 };
+                            new_front_link = Some(Some(used_node_idx));
+                            new_size = Some(rest);
+                            new_start = Some(offset + target);
 
                             // used node
                             let used_node = Node {
@@ -186,6 +220,77 @@ impl MonagementCore {
                                 };
                             }
 
+                            // update level
+                            // // second_level
+                            // // // linked_list
+                            let front_link_list = second_link_list.front;
+                            let back_link_list = second_link_list.back;
+                            let second_level_link_idx = second_link_list.index;
+
+                            second_level.link_list[second_link_list_idx] = None;
+                            second_level.free_link_list.push(second_link_list_idx);
+
+                            if second_level_link_idx == head_idx
+                                && second_level_link_idx == bottom_idx
+                            {
+                                second_level.head_link_list = None;
+                                second_level.bottom_link_list = None;
+                            } else if second_level_link_idx == head_idx {
+                                second_level.head_link_list = front_link_list;
+                                if let Some(front_idx) = front_link_list {
+                                    let front_node = second_level
+                                        .link_list
+                                        .get_mut(front_idx)
+                                        .ok_or("Error, Update Head Front Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Head Front Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    front_node.back = None;
+                                }
+                            } else if second_level_link_idx == bottom_idx {
+                                second_level.bottom_link_list = back_link_list;
+                                if let Some(back_idx) = back_link_list {
+                                    let back_node = second_level
+                                        .link_list
+                                        .get_mut(back_idx)
+                                        .ok_or("Error, Update Bottom Back Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Bottom Back Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    back_node.front = None;
+                                }
+                            } else {
+                                if let Some(front_idx) = front_link_list {
+                                    let front_node = second_level
+                                        .link_list
+                                        .get_mut(front_idx)
+                                        .ok_or("Error, Update Front Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Front Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    front_node.back = back_link_list;
+                                }
+
+                                if let Some(back_idx) = back_link_list {
+                                    let back_node = second_level
+                                        .link_list
+                                        .get_mut(back_idx)
+                                        .ok_or("Error, Update Back Second Level Link List. index link points to a non-existent node in the linked_list")?
+                                        .as_mut()
+                                        .ok_or("Error, Update Back Second Level Link List. link index points to an unallocated node address that has status None")?;
+                                    back_node.front = front_link_list;
+                                }
+                            }
+                            // // // bitmap counter
+                            second_level.count -= 1;
+                            if second_level.count == 0 {
+                                first_level.bitmap &= !(1 << sl_idx);
+                            }
+
+                            // // first level
+                            // // // bitmap counter
+                            first_level.count -= 1;
+                            if first_level.count == 0 {
+                                self.bitmap &= !(1 << fl_idx);
+                            }
+
                             // update_handler
                             update_free_node_handler = Some((
                                 None,
@@ -194,15 +299,110 @@ impl MonagementCore {
                                 Some(Some(used_node_idx)),
                                 fl_idx,
                                 sl_idx,
-                                link_i,
+                                link_idx,
                                 offset + target,
                             ));
 
                             allocated_link_handler = Some(used_node_idx);
                         }
-                        break;
                     }
-                }
+                };
+                // update linked list link
+
+                // for (link_i, free_node_idx) in second_level.link.iter().enumerate() {
+                //     let free_node = if let Some(idx) = free_node_idx {
+                //         self.linked_list.get_mut(*idx).ok_or(format!(
+                //             "Error, Scanning Selector. index link points to a non-existent node in the linked_list"
+                //         ))?.
+                //         as_mut().
+                //         ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?
+                //     } else {
+                //         continue;
+                //     };
+
+                //     if free_node.size >= target {
+                //         let mut rest = free_node.size - target;
+                //         if rest < self.minimum_size {
+                //             rest = 0;
+                //         }
+
+                //         if rest == 0 {
+                //             // update node
+                //             free_node.status = NodeStatus::Used;
+                //             // allocated link
+                //             allocated_link_handler = Some(free_node.index);
+
+                //             // update level
+                //             // // second_level
+                //             second_level.link[link_i] = None;
+                //             second_level.free_link_idx.push(link_i);
+                //             second_level.count -= 1;
+                //             if second_level.count == 0 {
+                //                 first_level.bitmap &= !(1 << sl_idx);
+                //             }
+
+                //             // // first level
+                //             first_level.count -= 1;
+                //             if first_level.count == 0 {
+                //                 self.bitmap &= !(1 << fl_idx);
+                //             }
+                //         } else {
+                //             // get metadata for new used node
+                //             let back_node_link = Some(free_node.index);
+                //             let front_node_link = free_node.front;
+                //             let offset = free_node.start;
+                //             let (used_node_idx, push_handler) =
+                //                 if let Some(idx) = self.free_linked_list_index.pop() {
+                //                     (idx, true)
+                //                 } else {
+                //                     (self.linked_list.len(), false)
+                //                 };
+
+                //             // used node
+                //             let used_node = Node {
+                //                 index: used_node_idx,
+                //                 size: target,
+                //                 status: NodeStatus::Used,
+                //                 back: back_node_link,
+                //                 front: front_node_link,
+                //                 start: offset,
+                //                 end: offset + target,
+                //             };
+
+                //             // enter node into linked list
+                //             if !push_handler {
+                //                 self.linked_list.push(Some(used_node));
+                //             } else {
+                //                 self.linked_list[used_node_idx] = Some(used_node);
+                //             }
+
+                //             // update front_node
+                //             if let Some(front_node_idx) = front_node_link {
+                //                 if let Some(front_node) = self.linked_list.get_mut(front_node_idx) {
+                //                     let front_node = front_node
+                //                         .as_mut()
+                //                         .ok_or(format!("Error, index link front points to None"))?;
+                //                     front_node.back = Some(used_node_idx);
+                //                 };
+                //             }
+
+                //             // update_handler
+                //             update_free_node_handler = Some((
+                //                 None,
+                //                 Some(rest),
+                //                 None::<Option<usize>>,
+                //                 Some(Some(used_node_idx)),
+                //                 fl_idx,
+                //                 sl_idx,
+                //                 link_i,
+                //                 offset + target,
+                //             ));
+
+                //             allocated_link_handler = Some(used_node_idx);
+                //         }
+                //         break;
+                //     }
+                // }
 
                 // masking map to next second level
                 mask_second_level_map &= mask_second_level_map - 1;
@@ -212,6 +412,20 @@ impl MonagementCore {
         }
 
         if let Some(link) = allocated_link_handler {
+            // update Free Node
+            if let (Some(link_idx), Some(n_front_link), Some(n_size), Some(n_start)) =
+                (free_node_idx, new_front_link, new_size, new_start)
+            {
+                let (fl, sl) = self.get_fl_sl(n_size);
+                let free_node = self.linked_list
+                    .get_mut(link_idx)
+                    .ok_or("Error, Scanning Selector. index link points to a non-existent node in the linked_list")?
+                    .as_mut()
+                    .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?;
+
+                free_node.front = n_front_link;
+            }
+
             if let Some(handler) = update_free_node_handler {
                 self.update_free_node(
                     handler.0, handler.1, handler.2, handler.3, handler.4, handler.5, handler.6,
