@@ -69,7 +69,7 @@ impl MonagementCore {
         let second_level = &mut first_level.sl_list[sl_indexing as usize];
         second_level.count += 1;
 
-        second_level.link = vec![Some(0)];
+        // second_level.link = vec![Some(0)];
         monagement.linked_list.push(Some(node));
 
         // update linked list link

@@ -1,10 +1,13 @@
 use std::num::NonZeroU64;
 
-use crate::monagement::{
-    allocated::Allocated,
-    level_core::SecondLevelLink,
-    monagement_core::{MonagementCore, SelectorOpt},
-    node_core::{Node, NodeStatus},
+use crate::{
+    SlIdx, get_fl_sl,
+    monagement::{
+        allocated::Allocated,
+        level_core::SecondLevelLink,
+        monagement_core::{MonagementCore, SelectorOpt},
+        node_core::{Node, NodeStatus},
+    },
 };
 
 impl MonagementCore {
@@ -83,7 +86,7 @@ impl MonagementCore {
                             .get_mut(link_idx)
                             .ok_or("Error, Scanning Selector. index link points to a non-existent node in the linked_list")?
                             .as_mut()
-                            .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?;
+                            .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None in linked list")?;
                         free_node_idx = Some(link_idx);
 
                         if free_node.size < target {
@@ -300,20 +303,9 @@ impl MonagementCore {
                                 self.bitmap &= !(1 << fl_idx);
                             }
 
-                            // update_handler
-                            // update_free_node_handler = Some((
-                            //     None,
-                            //     Some(rest),
-                            //     None::<Option<usize>>,
-                            //     Some(Some(used_node_idx)),
-                            //     fl_idx,
-                            //     sl_idx,
-                            //     link_idx,
-                            //     offset + target,
-                            // ));
-
                             allocated_link_handler = Some(used_node_idx);
                         }
+                        break;
                     }
                 };
                 // update linked list link
@@ -436,7 +428,7 @@ impl MonagementCore {
                 free_node.start = n_start;
 
                 // new location
-                let (fl, sl) = self.get_fl_sl(n_size);
+                let (fl, sl) = get_fl_sl(n_size, 0, 0, self.minimum_size_raw);
                 let first_level = self.fl_list.get_mut(fl as usize).ok_or(format!(
                     "Error, Update Free Node Error. The first level with index {} does not exist",
                     fl
@@ -458,6 +450,7 @@ impl MonagementCore {
                 } else {
                     (second_level.link_list.len(), true)
                 };
+                free_node.status = NodeStatus::Free(fl, sl, SlIdx(sl_idx));
 
                 if let None = second_level.head_link_list {
                     second_level.head_link_list = Some(sl_idx);
@@ -509,13 +502,14 @@ impl MonagementCore {
                 })
             } else {
                 Err(format!(
-                    "Allocation Error, not finding a node that can be allocated for data of size {}"
+                    "Allocation Error, not finding a node that can be allocated for data of size {}",
+                    target
                 ))
             }
         } else {
             Err(format!(
                 "Allocation Error, not finding a node that can be allocated for data of size {}",
-                size
+                target
             ))
         }
     }

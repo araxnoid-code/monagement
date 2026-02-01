@@ -1,33 +1,24 @@
-use std::i32;
+use std::num::NonZeroU64;
+
+use monagement::{Monagement, MonagementInit};
 
 fn main() {
-    let mut map: u32 = 0b11111111111111111111111111111111;
-    println!("{:b}", map);
+    let allocator = Monagement::init(MonagementInit {
+        start: 2,
+        maximum: 256,
+        selector_opt: monagement::SelectorOpt::SCANNING,
+    })
+    .expect("Init Error");
 
-    // let remove_index = 3;
-    // map &= !(1 << remove_index);
+    let _a = allocator
+        .allocate(NonZeroU64::new(50).unwrap())
+        .expect("allocate a error");
+    println!("{:#?}", allocator.borrow_core());
 
-    // println!("{:b}", map);
-
-    // // input data 1st
-    let found_index = map.trailing_ones();
-    println!("index di temukan {}", found_index);
-    // input data {...}
-    map |= 1 << found_index;
-
-    println!("{:b}", map);
-
-    // // input data 2nd
-    // let found_index = map.trailing_ones();
-    // // input data {...}
-    // map |= 1 << found_index;
-
-    // println!("{:b}", map);
-
-    // // input data 3rd
-    // let found_index = map.trailing_ones();
-    // // input data {...}
-    // map |= 1 << found_index;
-
-    // println!("{}", 0b110_i32.leading_zeros());
+    // let _b = allocator
+    //     .allocate(NonZeroU64::new(10).unwrap())
+    //     .expect("allocate b error");
+    // let _c = allocator
+    //     .allocate(NonZeroU64::new(20).unwrap())
+    //     .expect("allocate c error");
 }

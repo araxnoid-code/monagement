@@ -1,5 +1,5 @@
 mod monagement_core;
-pub use monagement_core::MonagementInit;
+pub use monagement_core::{MonagementInit, SelectorOpt};
 mod test;
 use std::{
     cell::{Ref, RefCell},
