@@ -2,6 +2,7 @@ use std::num::NonZeroU64;
 
 use crate::monagement::{
     allocated::Allocated,
+    level_core::SecondLevelLink,
     monagement_core::{MonagementCore, SelectorOpt},
     node_core::{Node, NodeStatus},
 };
@@ -20,11 +21,13 @@ impl MonagementCore {
         }
         // handler
         let mut allocated_link_handler = None;
-        let mut update_free_node_handler = None;
+        // let mut update_free_node_handler = None;
         let mut free_node_idx = None;
         let mut new_front_link = None;
         let mut new_size = None;
         let mut new_start = None;
+        let mut allocated_start = None;
+        let mut allocated_end = None;
 
         // searching in first_level
         let mut mask_first_level_map = self.bitmap & !((1 << fl_target) - 1);
@@ -63,7 +66,7 @@ impl MonagementCore {
                 // update linked list link
                 // SELECTOR(SCANNER)
                 if let (Some(head_idx), Some(bottom_idx)) =
-                    (second_level.head_link_list, second_level.bottom_link_list)
+                    (second_level.head_link_list, second_level.end_link_list)
                 {
                     let mut second_link_list_idx = head_idx;
                     loop {
@@ -106,6 +109,10 @@ impl MonagementCore {
                             // allocated link
                             allocated_link_handler = Some(free_node.index);
 
+                            // update handler
+                            allocated_start = Some(free_node.start);
+                            allocated_end = Some(free_node.end);
+
                             // update level
                             // // second_level
                             // // // linked_list
@@ -120,7 +127,7 @@ impl MonagementCore {
                                 && second_level_link_idx == bottom_idx
                             {
                                 second_level.head_link_list = None;
-                                second_level.bottom_link_list = None;
+                                second_level.end_link_list = None;
                             } else if second_level_link_idx == head_idx {
                                 second_level.head_link_list = front_link_list;
                                 if let Some(front_idx) = front_link_list {
@@ -133,7 +140,7 @@ impl MonagementCore {
                                     front_node.back = None;
                                 }
                             } else if second_level_link_idx == bottom_idx {
-                                second_level.bottom_link_list = back_link_list;
+                                second_level.end_link_list = back_link_list;
                                 if let Some(back_idx) = back_link_list {
                                     let back_node = second_level
                                         .link_list
@@ -191,6 +198,8 @@ impl MonagementCore {
                             new_front_link = Some(Some(used_node_idx));
                             new_size = Some(rest);
                             new_start = Some(offset + target);
+                            allocated_start = Some(offset + target - target);
+                            allocated_end = new_start;
 
                             // used node
                             let used_node = Node {
@@ -234,7 +243,7 @@ impl MonagementCore {
                                 && second_level_link_idx == bottom_idx
                             {
                                 second_level.head_link_list = None;
-                                second_level.bottom_link_list = None;
+                                second_level.end_link_list = None;
                             } else if second_level_link_idx == head_idx {
                                 second_level.head_link_list = front_link_list;
                                 if let Some(front_idx) = front_link_list {
@@ -247,7 +256,7 @@ impl MonagementCore {
                                     front_node.back = None;
                                 }
                             } else if second_level_link_idx == bottom_idx {
-                                second_level.bottom_link_list = back_link_list;
+                                second_level.end_link_list = back_link_list;
                                 if let Some(back_idx) = back_link_list {
                                     let back_node = second_level
                                         .link_list
@@ -292,16 +301,16 @@ impl MonagementCore {
                             }
 
                             // update_handler
-                            update_free_node_handler = Some((
-                                None,
-                                Some(rest),
-                                None::<Option<usize>>,
-                                Some(Some(used_node_idx)),
-                                fl_idx,
-                                sl_idx,
-                                link_idx,
-                                offset + target,
-                            ));
+                            // update_free_node_handler = Some((
+                            //     None,
+                            //     Some(rest),
+                            //     None::<Option<usize>>,
+                            //     Some(Some(used_node_idx)),
+                            //     fl_idx,
+                            //     sl_idx,
+                            //     link_idx,
+                            //     offset + target,
+                            // ));
 
                             allocated_link_handler = Some(used_node_idx);
                         }
@@ -416,31 +425,92 @@ impl MonagementCore {
             if let (Some(link_idx), Some(n_front_link), Some(n_size), Some(n_start)) =
                 (free_node_idx, new_front_link, new_size, new_start)
             {
-                let (fl, sl) = self.get_fl_sl(n_size);
                 let free_node = self.linked_list
                     .get_mut(link_idx)
-                    .ok_or("Error, Scanning Selector. index link points to a non-existent node in the linked_list")?
+                    .ok_or("Error, Update Free Node Error. index link points to a non-existent node in the linked_list")?
                     .as_mut()
-                    .ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?;
-
+                    .ok_or("Error, Update Free Node Error. link index points to an unallocated node address that has status None")?;
+                let free_node_index = free_node.index;
                 free_node.front = n_front_link;
+                free_node.size = n_size;
+                free_node.start = n_start;
+
+                // new location
+                let (fl, sl) = self.get_fl_sl(n_size);
+                let first_level = self.fl_list.get_mut(fl as usize).ok_or(format!(
+                    "Error, Update Free Node Error. The first level with index {} does not exist",
+                    fl
+                ))?;
+
+                let second_level = first_level.sl_list.get_mut(sl as usize).ok_or(format!(
+                    "Error, Update Free Node Error. The second level with index {} in the first level with index {} does not exist",
+                    sl, fl
+                ))?;
+
+                first_level.count += 1;
+                self.bitmap |= 1 << fl;
+
+                second_level.count += 1;
+                first_level.bitmap |= 1 << sl;
+
+                let (sl_idx, push_handler) = if let Some(idx) = second_level.free_link_list.pop() {
+                    (idx, false)
+                } else {
+                    (second_level.link_list.len(), true)
+                };
+
+                if let None = second_level.head_link_list {
+                    second_level.head_link_list = Some(sl_idx);
+                    second_level.end_link_list = Some(sl_idx);
+                    let second_level_link = SecondLevelLink {
+                        index: sl_idx,
+                        node_link: free_node_index,
+                        back: None,
+                        front: None,
+                    };
+
+                    if push_handler {
+                        second_level.link_list.push(Some(second_level_link));
+                    } else {
+                        second_level.link_list[sl_idx] = Some(second_level_link);
+                    }
+                } else if let Some(end_idx) = second_level.end_link_list {
+                    second_level.end_link_list = Some(sl_idx);
+                    second_level
+                        .link_list
+                        .get_mut(end_idx)
+                        .ok_or("Error, Locating Error. index link points to a non-existent node in the linked_list")?
+                        .as_mut()
+                        .ok_or("Error, Locating Error. link index points to an unallocated node address that has status None")?
+                        .front = Some(sl_idx);
+
+                    let second_level_link = SecondLevelLink {
+                        index: sl_idx,
+                        node_link: free_node_index,
+                        back: Some(end_idx),
+                        front: None,
+                    };
+
+                    if push_handler {
+                        second_level.link_list.push(Some(second_level_link));
+                    } else {
+                        second_level.link_list[sl_idx] = Some(second_level_link);
+                    }
+                }
             }
 
-            if let Some(handler) = update_free_node_handler {
-                self.update_free_node(
-                    handler.0, handler.1, handler.2, handler.3, handler.4, handler.5, handler.6,
-                    handler.7,
-                )?;
-
+            if let (Some(start), Some(end)) = (allocated_start, allocated_end) {
                 Ok(Allocated {
                     module: None,
                     size: target,
-                    start: handler.7 - target,
-                    end: handler.7,
+                    start,
+                    end,
                     link: link,
                 })
             } else {
-                Err(format!("Allocation Error, Update Free Node Error"))
+                Err(format!(
+                    "Allocation Error, not finding a node that can be allocated for data of size {}"
+                ))
             }
         } else {
             Err(format!(

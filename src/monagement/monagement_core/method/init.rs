@@ -34,7 +34,7 @@ impl MonagementCore {
             free_link_idx: vec![],
             // update
             head_link_list: None,
-            bottom_link_list: None,
+            end_link_list: None,
             link_list: vec![],
             free_link_list: vec![],
         };
@@ -80,7 +80,7 @@ impl MonagementCore {
             front: None,
         };
         second_level.head_link_list = Some(0);
-        second_level.bottom_link_list = Some(0);
+        second_level.end_link_list = Some(0);
         second_level.link_list.push(Some(second_level_link));
         // update linked list link
 

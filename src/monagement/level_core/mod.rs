@@ -22,7 +22,7 @@ pub struct SecondLevel {
     pub(crate) free_link_idx: Vec<usize>,
     // update
     pub(crate) head_link_list: Option<usize>,
-    pub(crate) bottom_link_list: Option<usize>,
+    pub(crate) end_link_list: Option<usize>,
     pub(crate) link_list: Vec<Option<SecondLevelLink>>,
     pub(crate) free_link_list: Vec<usize>,
 }
