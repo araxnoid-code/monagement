@@ -55,9 +55,8 @@ impl MonagementCore {
 
         if let Some(new_size) = size {
             // update second_level
-            // second_level.link[link_idx] = None;
-            // second_level.free_link_idx.push(link_idx);
-            second_level.bitmap &= !(1 << link_idx);
+            second_level.link[link_idx] = None;
+            second_level.free_link_idx.push(link_idx);
             second_level.count -= 1;
             if second_level.count == 0 {
                 first_level.bitmap &= !(1 << sl);
@@ -87,9 +86,6 @@ impl MonagementCore {
 
             second_level.count += 1;
             first_level.bitmap |= 1 << n_sl;
-
-            // // alocation free node in Second Level
-            let sl_idx = second_level.bitmap.trailing_ones();
 
             // // alocation free node
             let sl_idx = if let Some(idx) = second_level.free_link_idx.pop() {

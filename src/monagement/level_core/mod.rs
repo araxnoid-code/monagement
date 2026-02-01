@@ -11,6 +11,4 @@ pub struct SecondLevel {
     pub(crate) link: Vec<Option<usize>>,
     pub(crate) free_link_idx: Vec<usize>,
     pub(crate) direct_node: Option<(usize, u64)>,
-    // bitmap
-    pub(crate) bitmap: u64,
 }
