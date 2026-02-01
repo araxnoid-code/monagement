@@ -1,70 +1,33 @@
-use std::num::NonZeroU64;
-
-use monagement::{Monagement, MonagementInit};
-use rand::random;
+use std::i32;
 
 fn main() {
-    let allocator = Monagement::init(MonagementInit {
-        start: 5,
-        maximum: 16384,
-    })
-    .expect("Init Error");
+    let mut map: u32 = 0b11111111111111111111111111111111;
+    println!("{:b}", map);
 
-    unsafe {
-        let a = allocator
-            .allocate(NonZeroU64::new_unchecked(500))
-            .expect("allocate a error");
+    // let remove_index = 3;
+    // map &= !(1 << remove_index);
 
-        let b = allocator
-            .allocate(NonZeroU64::new_unchecked(200))
-            .expect("allocate b error");
+    // println!("{:b}", map);
 
-        let c = allocator
-            .allocate(NonZeroU64::new_unchecked(1000))
-            .expect("allocate c error");
+    // // input data 1st
+    let found_index = map.trailing_ones();
+    println!("index di temukan {}", found_index);
+    // input data {...}
+    map |= 1 << found_index;
 
-        let d = allocator
-            .allocate(NonZeroU64::new_unchecked(800))
-            .expect("allocate d error");
+    println!("{:b}", map);
 
-        let e = allocator
-            .allocate(NonZeroU64::new_unchecked(300))
-            .expect("allocate e error");
+    // // input data 2nd
+    // let found_index = map.trailing_ones();
+    // // input data {...}
+    // map |= 1 << found_index;
 
-        let f = allocator
-            .allocate(NonZeroU64::new_unchecked(1500))
-            .expect("allocate f error");
+    // println!("{:b}", map);
 
-        let g = allocator
-            .allocate(NonZeroU64::new_unchecked(1750))
-            .expect("allocate g error");
+    // // input data 3rd
+    // let found_index = map.trailing_ones();
+    // // input data {...}
+    // map |= 1 << found_index;
 
-        let h = allocator
-            .allocate(NonZeroU64::new_unchecked(1200))
-            .expect("allocate h error");
-
-        let i = allocator
-            .allocate(NonZeroU64::new_unchecked(300))
-            .expect("allocate i error");
-
-        let j = allocator
-            .allocate(NonZeroU64::new_unchecked(3025))
-            .expect("allocate j error");
-
-        let k = allocator
-            .allocate(NonZeroU64::new_unchecked(100))
-            .expect("allocate k error");
-
-        let l = allocator
-            .allocate(NonZeroU64::new_unchecked(200))
-            .expect("allocate l error");
-
-        let m = allocator
-            .allocate(NonZeroU64::new_unchecked(2500))
-            .expect("allocate m error");
-
-        let n = allocator
-            .allocate(NonZeroU64::new_unchecked(1500))
-            .expect("allocate n error");
-    }
+    // println!("{}", 0b110_i32.leading_zeros());
 }

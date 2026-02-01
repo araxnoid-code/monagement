@@ -9,6 +9,7 @@ fn testing_allocating_low() {
     let allocator = Monagement::init(MonagementInit {
         start: 2,
         maximum: 256,
+        selector_opt: crate::monagement::monagement_core::SelectorOpt::SCANNING,
     })
     .expect("Init Error");
 
@@ -121,6 +122,7 @@ fn testing_allocating_medium() {
     let allocator = Monagement::init(MonagementInit {
         start: 5,
         maximum: 16384,
+        selector_opt: crate::monagement::monagement_core::SelectorOpt::SCANNING,
     })
     .expect("Init Error");
 
@@ -283,7 +285,12 @@ fn testing_allocating_medium() {
 #[test]
 fn allocating_free_stress() {
     let maximum = 16777216;
-    let monagement = Monagement::init(MonagementInit { start: 3, maximum }).unwrap();
+    let monagement = Monagement::init(MonagementInit {
+        start: 3,
+        maximum,
+        selector_opt: crate::monagement::monagement_core::SelectorOpt::SCANNING,
+    })
+    .unwrap();
 
     for i in 0..1000 {
         let size = random::<u16>() as u64;

@@ -24,10 +24,7 @@ impl MonagementCore {
             fl_list: vec![],
             linked_list: Vec::with_capacity(1),
             free_linked_list_index: vec![],
-
-            //
-            update_counter: None,
-            update_back_link: (None, None),
+            selector_option: monagement_init.selector_opt,
         };
 
         let (fl_indexing, sl_indexing) = monagement.get_fl_sl(max_size);
@@ -35,6 +32,8 @@ impl MonagementCore {
             count: 0,
             link: vec![],
             free_link_idx: vec![],
+            direct_node: None,
+            bitmap: 0,
         };
 
         let first_level_len = fl_indexing + 1;
@@ -61,13 +60,13 @@ impl MonagementCore {
         // first level
         let first_level = &mut monagement.fl_list[fl_indexing as usize];
         first_level.count += 1;
-        // first_level.size = max_size;
         first_level.bitmap = 1 << sl_indexing;
 
         // second level
         let second_level = &mut first_level.sl_list[sl_indexing as usize];
         second_level.count += 1;
-        // second_level.size = max_size;
+        second_level.direct_node = Some((0, max_size));
+        second_level.bitmap = 1;
         second_level.link = vec![Some(0)];
 
         monagement.linked_list.push(Some(node));

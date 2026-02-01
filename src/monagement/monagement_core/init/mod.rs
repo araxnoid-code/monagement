@@ -1,6 +1,9 @@
+use crate::monagement::monagement_core::SelectorOpt;
+
 pub struct MonagementInit {
     pub start: u64,
     pub maximum: u64,
+    pub selector_opt: SelectorOpt,
 }
 
 impl MonagementInit {
