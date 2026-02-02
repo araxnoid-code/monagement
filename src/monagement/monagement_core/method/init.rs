@@ -30,11 +30,11 @@ impl MonagementCore {
         let (fl_indexing, sl_indexing) = monagement.get_fl_sl(max_size);
         let second_level = SecondLevel {
             count: 0,
-            link: vec![],
-            free_link_idx: vec![],
+            // link: vec![],
+            // free_link_idx: vec![],
             // update
-            head_link_list: None,
-            end_link_list: None,
+            head_link: None,
+            end_link: None,
             link_list: vec![],
             free_link_list: vec![],
         };
@@ -79,8 +79,8 @@ impl MonagementCore {
             back: None,
             front: None,
         };
-        second_level.head_link_list = Some(0);
-        second_level.end_link_list = Some(0);
+        second_level.head_link = Some(0);
+        second_level.end_link = Some(0);
         second_level.link_list.push(Some(second_level_link));
         // update linked list link
 

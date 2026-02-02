@@ -5,7 +5,7 @@ use crate::{
     monagement::{
         allocated::Allocated,
         level_core::SecondLevelLink,
-        monagement_core::{MonagementCore, SelectorOpt},
+        monagement_core::MonagementCore,
         node_core::{Node, NodeStatus},
     },
 };
@@ -34,7 +34,7 @@ impl MonagementCore {
 
         // searching in first_level
         let mut mask_first_level_map = self.bitmap & !((1 << fl_target) - 1);
-        loop {
+        'main: loop {
             // calculate idx of active bit
             let fl_idx = mask_first_level_map.trailing_zeros() as u64;
             if fl_idx == 64 {
@@ -69,7 +69,7 @@ impl MonagementCore {
                 // update linked list link
                 // SELECTOR(SCANNER)
                 if let (Some(head_idx), Some(bottom_idx)) =
-                    (second_level.head_link_list, second_level.end_link_list)
+                    (second_level.head_link, second_level.end_link)
                 {
                     let mut second_link_list_idx = head_idx;
                     loop {
@@ -129,10 +129,10 @@ impl MonagementCore {
                             if second_level_link_idx == head_idx
                                 && second_level_link_idx == bottom_idx
                             {
-                                second_level.head_link_list = None;
-                                second_level.end_link_list = None;
+                                second_level.head_link = None;
+                                second_level.end_link = None;
                             } else if second_level_link_idx == head_idx {
-                                second_level.head_link_list = front_link_list;
+                                second_level.head_link = front_link_list;
                                 if let Some(front_idx) = front_link_list {
                                     let front_node = second_level
                                         .link_list
@@ -143,7 +143,7 @@ impl MonagementCore {
                                     front_node.back = None;
                                 }
                             } else if second_level_link_idx == bottom_idx {
-                                second_level.end_link_list = back_link_list;
+                                second_level.end_link = back_link_list;
                                 if let Some(back_idx) = back_link_list {
                                     let back_node = second_level
                                         .link_list
@@ -245,10 +245,10 @@ impl MonagementCore {
                             if second_level_link_idx == head_idx
                                 && second_level_link_idx == bottom_idx
                             {
-                                second_level.head_link_list = None;
-                                second_level.end_link_list = None;
+                                second_level.head_link = None;
+                                second_level.end_link = None;
                             } else if second_level_link_idx == head_idx {
-                                second_level.head_link_list = front_link_list;
+                                second_level.head_link = front_link_list;
                                 if let Some(front_idx) = front_link_list {
                                     let front_node = second_level
                                         .link_list
@@ -259,7 +259,7 @@ impl MonagementCore {
                                     front_node.back = None;
                                 }
                             } else if second_level_link_idx == bottom_idx {
-                                second_level.end_link_list = back_link_list;
+                                second_level.end_link = back_link_list;
                                 if let Some(back_idx) = back_link_list {
                                     let back_node = second_level
                                         .link_list
@@ -305,105 +305,9 @@ impl MonagementCore {
 
                             allocated_link_handler = Some(used_node_idx);
                         }
-                        break;
+                        break 'main;
                     }
                 };
-                // update linked list link
-
-                // for (link_i, free_node_idx) in second_level.link.iter().enumerate() {
-                //     let free_node = if let Some(idx) = free_node_idx {
-                //         self.linked_list.get_mut(*idx).ok_or(format!(
-                //             "Error, Scanning Selector. index link points to a non-existent node in the linked_list"
-                //         ))?.
-                //         as_mut().
-                //         ok_or("Error, Scanning Selector. link index points to an unallocated node address that has status None")?
-                //     } else {
-                //         continue;
-                //     };
-
-                //     if free_node.size >= target {
-                //         let mut rest = free_node.size - target;
-                //         if rest < self.minimum_size {
-                //             rest = 0;
-                //         }
-
-                //         if rest == 0 {
-                //             // update node
-                //             free_node.status = NodeStatus::Used;
-                //             // allocated link
-                //             allocated_link_handler = Some(free_node.index);
-
-                //             // update level
-                //             // // second_level
-                //             second_level.link[link_i] = None;
-                //             second_level.free_link_idx.push(link_i);
-                //             second_level.count -= 1;
-                //             if second_level.count == 0 {
-                //                 first_level.bitmap &= !(1 << sl_idx);
-                //             }
-
-                //             // // first level
-                //             first_level.count -= 1;
-                //             if first_level.count == 0 {
-                //                 self.bitmap &= !(1 << fl_idx);
-                //             }
-                //         } else {
-                //             // get metadata for new used node
-                //             let back_node_link = Some(free_node.index);
-                //             let front_node_link = free_node.front;
-                //             let offset = free_node.start;
-                //             let (used_node_idx, push_handler) =
-                //                 if let Some(idx) = self.free_linked_list_index.pop() {
-                //                     (idx, true)
-                //                 } else {
-                //                     (self.linked_list.len(), false)
-                //                 };
-
-                //             // used node
-                //             let used_node = Node {
-                //                 index: used_node_idx,
-                //                 size: target,
-                //                 status: NodeStatus::Used,
-                //                 back: back_node_link,
-                //                 front: front_node_link,
-                //                 start: offset,
-                //                 end: offset + target,
-                //             };
-
-                //             // enter node into linked list
-                //             if !push_handler {
-                //                 self.linked_list.push(Some(used_node));
-                //             } else {
-                //                 self.linked_list[used_node_idx] = Some(used_node);
-                //             }
-
-                //             // update front_node
-                //             if let Some(front_node_idx) = front_node_link {
-                //                 if let Some(front_node) = self.linked_list.get_mut(front_node_idx) {
-                //                     let front_node = front_node
-                //                         .as_mut()
-                //                         .ok_or(format!("Error, index link front points to None"))?;
-                //                     front_node.back = Some(used_node_idx);
-                //                 };
-                //             }
-
-                //             // update_handler
-                //             update_free_node_handler = Some((
-                //                 None,
-                //                 Some(rest),
-                //                 None::<Option<usize>>,
-                //                 Some(Some(used_node_idx)),
-                //                 fl_idx,
-                //                 sl_idx,
-                //                 link_i,
-                //                 offset + target,
-                //             ));
-
-                //             allocated_link_handler = Some(used_node_idx);
-                //         }
-                //         break;
-                //     }
-                // }
 
                 // masking map to next second level
                 mask_second_level_map &= mask_second_level_map - 1;
@@ -452,9 +356,9 @@ impl MonagementCore {
                 };
                 free_node.status = NodeStatus::Free(fl, sl, SlIdx(sl_idx));
 
-                if let None = second_level.head_link_list {
-                    second_level.head_link_list = Some(sl_idx);
-                    second_level.end_link_list = Some(sl_idx);
+                if let None = second_level.head_link {
+                    second_level.head_link = Some(sl_idx);
+                    second_level.end_link = Some(sl_idx);
                     let second_level_link = SecondLevelLink {
                         index: sl_idx,
                         node_link: free_node_index,
@@ -467,8 +371,8 @@ impl MonagementCore {
                     } else {
                         second_level.link_list[sl_idx] = Some(second_level_link);
                     }
-                } else if let Some(end_idx) = second_level.end_link_list {
-                    second_level.end_link_list = Some(sl_idx);
+                } else if let Some(end_idx) = second_level.end_link {
+                    second_level.end_link = Some(sl_idx);
                     second_level
                         .link_list
                         .get_mut(end_idx)

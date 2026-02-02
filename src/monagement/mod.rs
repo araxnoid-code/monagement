@@ -34,10 +34,11 @@ impl Monagement {
         Ok(allocated)
     }
 
-    pub fn free(&self, allocated: Allocated) -> Result<(), String> {
-        self.core.borrow_mut().free(&allocated)?;
-        Ok(())
-    }
+    // pub fn free(&self, allocated: Allocated) -> Result<(), String> {
+    //     // allocated.free();
+    //     self.core.borrow_mut().free(&allocated)?;
+    //     Ok(())
+    // }
 
     pub fn borrow_core(&self) -> Ref<'_, MonagementCore> {
         self.core.borrow()

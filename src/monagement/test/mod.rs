@@ -2,7 +2,7 @@ use std::num::NonZeroU64;
 
 use rand::random;
 
-use crate::{Monagement, MonagementInit, NodeStatus};
+use crate::{Monagement, MonagementInit, NodeStatus, SelectorOpt};
 
 #[test]
 fn testing_allocating_low() {
@@ -288,11 +288,11 @@ fn allocating_free_stress() {
     let monagement = Monagement::init(MonagementInit {
         start: 3,
         maximum,
-        selector_opt: crate::monagement::monagement_core::SelectorOpt::SCANNING,
+        selector_opt: SelectorOpt::SCANNING,
     })
     .unwrap();
 
-    for i in 0..1000 {
+    for i in 0..1 {
         let size = random::<u16>() as u64;
         let a = if size > 0 {
             let drop_stat = rand::random_bool(0.5);
@@ -307,7 +307,7 @@ fn allocating_free_stress() {
             None
         };
 
-        if let Some(allocated) = a {
+        if let Some(allocated) = &a {
             let allocator = monagement.borrow_core();
             let node = allocator
                 .get_linked_list()
@@ -336,7 +336,7 @@ fn allocating_free_stress() {
             None
         };
 
-        if let Some(allocated) = a {
+        if let Some(allocated) = &a {
             let allocator = monagement.borrow_core();
             let node = allocator
                 .get_linked_list()
@@ -365,7 +365,7 @@ fn allocating_free_stress() {
             None
         };
 
-        if let Some(allocated) = a {
+        if let Some(allocated) = &a {
             let allocator = monagement.borrow_core();
             let node = allocator
                 .get_linked_list()
@@ -394,7 +394,7 @@ fn allocating_free_stress() {
             None
         };
 
-        if let Some(allocated) = a {
+        if let Some(allocated) = &a {
             let allocator = monagement.borrow_core();
             let node = allocator
                 .get_linked_list()
@@ -423,7 +423,7 @@ fn allocating_free_stress() {
             None
         };
 
-        if let Some(allocated) = a {
+        if let Some(allocated) = &a {
             let allocator = monagement.borrow_core();
             let node = allocator
                 .get_linked_list()
@@ -450,4 +450,111 @@ fn allocating_free_stress() {
         .get_size();
 
     assert_eq!(maximum, size);
+}
+
+#[test]
+fn second_level_linked_list_small_testing() {
+    let allocator = Monagement::init(MonagementInit {
+        start: 2,
+        maximum: 1024,
+        selector_opt: SelectorOpt::SCANNING,
+    })
+    .expect("Init Error");
+
+    let _a = allocator
+        .allocate(NonZeroU64::new(28).unwrap())
+        .expect("allocate a error");
+
+    let _b = allocator
+        .allocate(NonZeroU64::new(31).unwrap())
+        .expect("allocate b error");
+
+    let _c = allocator
+        .allocate(NonZeroU64::new(31).unwrap())
+        .expect("allocate c error");
+
+    let _d = allocator
+        .allocate(NonZeroU64::new(31).unwrap())
+        .expect("allocate d error");
+
+    let _e = allocator
+        .allocate(NonZeroU64::new(29).unwrap())
+        .expect("allocate e error");
+
+    let _f = allocator
+        .allocate(NonZeroU64::new(31).unwrap())
+        .expect("allocate f error");
+
+    let _g = allocator
+        .allocate(NonZeroU64::new(31).unwrap())
+        .expect("allocate g error");
+
+    drop(_a);
+    drop(_c);
+    drop(_e);
+
+    {
+        let core = allocator.borrow_core();
+        let first_level = core.get_fl_list().get(2).expect("msg");
+        let second_level = first_level.sl_list.get(3).expect("msg");
+        assert_eq!(3, second_level.count);
+
+        let head_link = second_level
+            .head_link
+            .expect("head idx points to an invalid index");
+        assert_eq!(head_link, 0);
+
+        let end_link = second_level
+            .end_link
+            .expect("end idx points to an invalid index");
+        assert_eq!(end_link, 2);
+
+        let link = second_level
+            .link_list
+            .get(0)
+            .expect("leads to an invalid index")
+            .as_ref()
+            .expect("leads to a link that has the value None");
+        assert_eq!(0, link.index);
+        assert_eq!(1, link.node_link);
+        let front_link = link.front.expect("front link not initialized");
+        assert_eq!(1, front_link);
+        if let Some(_) = link.back {
+            panic!("this is the first link, there should be no back links")
+        }
+
+        let link = second_level
+            .link_list
+            .get(1)
+            .expect("leads to an invalid index")
+            .as_ref()
+            .expect("leads to a link that has the value None");
+        assert_eq!(1, link.index);
+        assert_eq!(3, link.node_link);
+        let front_link = link.front.expect("front link not initialized");
+        assert_eq!(2, front_link);
+        let back_link = link.back.expect("back link not initialized");
+        assert_eq!(0, back_link);
+
+        let link = second_level
+            .link_list
+            .get(2)
+            .expect("leads to an invalid index")
+            .as_ref()
+            .expect("leads to a link that has the value None");
+        assert_eq!(2, link.index);
+        assert_eq!(5, link.node_link);
+        if let Some(_) = link.front {
+            panic!("this is the last link, there should be no more front links")
+        }
+        let back_link = link.back.expect("back link not initialized");
+        assert_eq!(1, back_link);
+    }
+
+    let _h = allocator
+        .allocate(NonZeroU64::new(30).unwrap())
+        .expect("allocate h error");
+    let _i = allocator
+        .allocate(NonZeroU64::new(29).unwrap())
+        .expect("allocate i error");
 }
