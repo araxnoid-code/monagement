@@ -319,8 +319,6 @@ impl MonagementCore {
             }
         }
 
-        // second_level.link[sl_idx] = None;
-        // second_level.free_link_idx.push(sl_idx);
         second_level.link_list[sl_idx] = None;
         second_level.free_link_list.push(sl_idx);
         second_level.count -= 1;

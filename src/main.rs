@@ -8,19 +8,55 @@ fn main() {
     let allocator = Monagement::init(MonagementInit {
         start: 5,
         maximum,
-        selector_opt: SelectorOpt::SCANNING,
+        selector_opt: SelectorOpt::DIRECT,
     })
     .unwrap();
 
-    let count = 500000;
+    let mut save = vec![];
+
     let tick = std::time::SystemTime::now()
         .duration_since(SystemTime::UNIX_EPOCH)
         .unwrap()
         .as_millis();
 
-    for _ in 0..count {
-        let allocated = allocator.allocate(NonZeroU64::new(1000).unwrap()).unwrap();
-        allocated.free();
+    for _ in 0..10000 {
+        for _ in 0..random_range(0..50) {
+            let size = random::<u16>() as u64;
+            if size <= 0 {
+                continue;
+            }
+            save.push(allocator.allocate(NonZeroU64::new(size).unwrap()));
+        }
+
+        let mut len = save.len();
+        for _ in 0..len / 2 {
+            let random = random_range(0..len);
+            let allocated = save.swap_remove(random);
+            if let Ok(allocated) = allocated {
+                allocated.free();
+            }
+
+            len -= 1;
+        }
+
+        for _ in 0..random_range(0..50) {
+            let size = random::<u16>() as u64;
+            if size <= 0 {
+                continue;
+            }
+            save.push(allocator.allocate(NonZeroU64::new(size).unwrap()));
+        }
+
+        let mut len = save.len();
+        for _ in 0..len / 2 {
+            let random = random_range(0..len);
+            let allocated = save.swap_remove(random);
+            if let Ok(allocated) = allocated {
+                allocated.free();
+            }
+
+            len -= 1;
+        }
     }
 
     let tock = std::time::SystemTime::now()
@@ -29,5 +65,4 @@ fn main() {
         .as_millis();
 
     println!("{}", tock - tick);
-    println!("mean :{}", (tock as f64 - tick as f64) / count as f64)
 }

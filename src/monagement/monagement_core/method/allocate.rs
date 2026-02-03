@@ -1,7 +1,7 @@
 use std::num::NonZeroU64;
 
 use crate::{
-    SlIdx, get_fl_sl,
+    SelectorOpt, SlIdx, get_fl_sl,
     monagement::{
         allocated::Allocated,
         level_core::SecondLevelLink,
@@ -67,7 +67,7 @@ impl MonagementCore {
                 ))?;
 
                 // update linked list link
-                // SELECTOR(SCANNER)
+                // SELECTOR(SCANNER/DIRECT)
                 if let (Some(head_idx), Some(bottom_idx)) =
                     (second_level.head_link, second_level.end_link)
                 {
@@ -90,7 +90,12 @@ impl MonagementCore {
                         free_node_idx = Some(link_idx);
 
                         if free_node.size < target {
-                            if let Some(front_idx) = second_link_list.front {
+                            if let SelectorOpt::DIRECT = self.selector_option {
+                                // DIRECT
+                                // go straight to the next category
+                                break;
+                            } else if let Some(front_idx) = second_link_list.front {
+                                // SCANNER
                                 // next linked
                                 second_link_list_idx = front_idx;
                                 continue;
