@@ -6,6 +6,16 @@ pub struct MonagementInit {
     pub selector_opt: SelectorOpt,
 }
 
+impl Default for MonagementInit {
+    fn default() -> Self {
+        Self {
+            start: 2,
+            maximum: 1024,
+            selector_opt: SelectorOpt::default(),
+        }
+    }
+}
+
 impl MonagementInit {
     pub fn get_minimum(&self) -> u64 {
         1 << self.start

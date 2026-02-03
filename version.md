@@ -19,12 +19,5 @@
 - At the second level, links are used to point to free nodes in a linked list. The link algorithm now uses a linked list instead of a regular array, and is supported by the head_link and end_link properties to directly point to the first and last links.
 - added a range property to Allocated, showing the start and end.
   - `ATTENTION!`, the start..end range will sometimes not match start..start + size, because management will take the full node size if the remaining memory is smaller than the size of fl_0.
-- using NonZeroU64 for the allocate method input.
+- using NonZeroU64 for the allocate method input
 - add test code, see [testing](./src/monagement/test/mod.rs)
-
-## version/0.0.1
-27-jan-2026
-- allocate method.
-- free method.
-- minimum size is 4.
-- the division on the second level is 4 and cannot be changed.
