@@ -10,8 +10,9 @@ use std::{
 mod tools;
 pub use tools::*;
 
-use crate::monagement::{allocated::Allocated, monagement_core::MonagementCore};
+use crate::monagement::monagement_core::MonagementCore;
 mod allocated;
+pub use allocated::Allocated;
 mod level_core;
 mod node_core;
 pub use node_core::*;

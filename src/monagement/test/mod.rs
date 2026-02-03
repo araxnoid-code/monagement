@@ -1,4 +1,4 @@
-use std::num::NonZeroU64;
+use std::{num::NonZeroU64, time::SystemTime};
 
 use rand::random;
 
@@ -292,7 +292,7 @@ fn allocating_free_stress() {
     })
     .unwrap();
 
-    for i in 0..1 {
+    for i in 0..1000 {
         let size = random::<u16>() as u64;
         let a = if size > 0 {
             let drop_stat = rand::random_bool(0.5);
@@ -557,4 +557,35 @@ fn second_level_linked_list_small_testing() {
     let _i = allocator
         .allocate(NonZeroU64::new(29).unwrap())
         .expect("allocate i error");
+}
+
+#[test]
+fn test_peforma() {
+    let maximum = 16777216;
+    let allocator = Monagement::init(MonagementInit {
+        start: 5,
+        maximum,
+        selector_opt: SelectorOpt::SCANNING,
+    })
+    .unwrap();
+
+    let count = 500000;
+    let tick = std::time::SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    for _ in 0..count {
+        let allocated = allocator.allocate(NonZeroU64::new(1000).unwrap()).unwrap();
+        allocated.free();
+    }
+
+    let tock = std::time::SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .unwrap()
+        .as_millis();
+
+    println!("\ntested monagement with an allocation of 500,000 times and immediately cleared");
+    println!("total\t: {} ms", tock - tick);
+    println!("mean\t: {} ms", (tock as f64 - tick as f64) / count as f64)
 }
