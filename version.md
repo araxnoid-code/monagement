@@ -8,7 +8,7 @@
   - maximum, Determines the maximum capacity and the earliest free node (space) in the category. default `1024`.
   - selector_opt, determines how monagement decides between 2 or more free nodes that have the same category. default `SelectorOpt::DIRECT`
     - SelectorOpt::DIRECT, take the earliest node.
-    - SelectorOpt::SCANNING, perform scanning looking for nodes that fit into one category.
+    - SelectorOpt::SCANNING, perform a scan to find matching nodes in the same category.
 - The total number of categories on the second level is now based on the start property on MonagementInit, for example: `start:3`, then 2^3 = 8, then there will be 8 categories.
 - refactoring the `allocate` method and the `free` method.
 - To free up memory that has been allocated, now only 2 methods apply:
