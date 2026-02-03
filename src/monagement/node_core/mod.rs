@@ -1,9 +1,9 @@
-#[derive(Debug)]
-pub(crate) struct Sl_Idx(pub usize);
+#[derive(Debug, Clone)]
+pub struct SlIdx(pub usize);
 
-#[derive(Debug)]
-pub(crate) enum NodeStatus {
-    Free(u32, u32, Sl_Idx),
+#[derive(Debug, Clone)]
+pub enum NodeStatus {
+    Free(u64, u64, SlIdx),
     Used,
 }
 
@@ -11,7 +11,35 @@ pub(crate) enum NodeStatus {
 pub struct Node {
     pub(crate) index: usize,
     pub(crate) status: NodeStatus,
-    pub(crate) size: u32,
+    pub(crate) size: u64,
     pub(crate) back: Option<usize>,
     pub(crate) front: Option<usize>,
+    pub(crate) start: u64,
+    pub(crate) end: u64,
+}
+
+impl Node {
+    pub fn get_index(&self) -> usize {
+        self.index
+    }
+
+    pub fn get_status(&self) -> &NodeStatus {
+        &self.status
+    }
+
+    pub fn get_size(&self) -> u64 {
+        self.size
+    }
+
+    pub fn get_back_link_id(&self) -> Option<usize> {
+        self.back
+    }
+
+    pub fn get_front_link_id(&self) -> Option<usize> {
+        self.front
+    }
+
+    pub fn get_range(&self) -> (u64, u64) {
+        (self.start, self.end)
+    }
 }

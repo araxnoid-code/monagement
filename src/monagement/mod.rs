@@ -1,40 +1,45 @@
 mod monagement_core;
+pub use monagement_core::{MonagementInit, SelectorOpt};
+mod test;
 use std::{
     cell::{Ref, RefCell},
-    ops::Deref,
+    num::NonZeroU64,
     rc::Rc,
 };
 
 mod tools;
 pub use tools::*;
 
-use crate::monagement::{allocated::Allocated, monagement_core::MonagementCore};
+use crate::monagement::monagement_core::MonagementCore;
 mod allocated;
+pub use allocated::Allocated;
 mod level_core;
 mod node_core;
+pub use node_core::*;
 
 pub struct Monagement {
     core: Rc<RefCell<MonagementCore>>,
 }
 
 impl Monagement {
-    pub fn init(max_size: u32) -> Result<Self, String> {
+    pub fn init(monagement_init: MonagementInit) -> Result<Self, String> {
         Ok(Self {
-            core: Rc::new(RefCell::new(MonagementCore::init(max_size)?)),
+            core: Rc::new(RefCell::new(MonagementCore::init(monagement_init)?)),
         })
     }
 
-    pub fn allocate(&self, size: u32) -> Result<allocated::Allocated, String> {
+    pub fn allocate(&self, size: NonZeroU64) -> Result<allocated::Allocated, String> {
         let mut allocated = self.core.borrow_mut().allocate(size)?;
         allocated.module = Some(self.core.clone());
 
         Ok(allocated)
     }
 
-    pub fn free(&self, allocated: Allocated) -> Result<(), String> {
-        self.core.borrow_mut().free(&allocated)?;
-        Ok(())
-    }
+    // pub fn free(&self, allocated: Allocated) -> Result<(), String> {
+    //     // allocated.free();
+    //     self.core.borrow_mut().free(&allocated)?;
+    //     Ok(())
+    // }
 
     pub fn borrow_core(&self) -> Ref<'_, MonagementCore> {
         self.core.borrow()
@@ -46,5 +51,9 @@ impl Monagement {
 
     pub fn get_core(&self) -> &Rc<RefCell<MonagementCore>> {
         &self.core
+    }
+
+    pub fn get_max_size(&self) -> u64 {
+        self.borrow_core().get_max_size()
     }
 }

@@ -1,0 +1,23 @@
+## version/0.0.2
+3-Feb-2026
+- add MonagementInit in Monagement initialization, MonagementInit has properties including:
+  - start, becomes the start of the category and sets the smallest category range. size is based on 2^start. default `2`.
+    - example: 
+      - `start:2`, then 2^2 then fl_0 will have range 4, 5, 6, 7.
+      - `start:3`, then 2^3 then fl_0 will have sizes 8, 9, 10, 11, 12, 13, 14, 15.
+  - maximum, Determines the maximum capacity and the earliest free node (space) in the category. default `1024`.
+  - selector_opt, determines how management decides between 2 or more free nodes that have the same category. default `SelectorOpt::DIRECT`
+    - SelectorOpt::DIRECT, take the earliest node.
+    - SelectorOpt::SCANNING, perform scanning looking for nodes that fit into one category.
+- The total number of categories on the second level is now based on the start property on ManagementInit, for example: `start:3`, then 2^3 = 8, then there will be 8 categories.
+- refactoring the `allocate` method and the `free` method.
+- To free up memory that has been allocated, now only 2 methods apply:
+  - using the free method, `a.free()`
+  - using drop, `drop(a)`
+- Updated the bitmap method for finding free node coordinates. Initially, a linear search is now performed, but now it jumps directly to the active bit without having to navigate through the dead bits. This change applies to bitmaps that map the first and second levels.
+- overcome double free error.
+- At the second level, links are used to point to free nodes in a linked list. The link algorithm now uses a linked list instead of a regular array, and is supported by the head_link and end_link properties to directly point to the first and last links.
+- added a range property to Allocated, showing the start and end.
+  - `ATTENTION!`, the start..end range will sometimes not match start..start + size, because management will take the full node size if the remaining memory is smaller than the size of fl_0.
+- using NonZeroU64 for the allocate method input
+- add test code, see [testing](./src/monagement/test/mod.rs)

@@ -3,50 +3,60 @@
     <b><p>TLSF MEMORY ALLOCATOR</p></b>
     <p>⚙️ under development ⚙️</p>
     <b>
-        <p>Version / 0.0.1</p>
+        <p>Version / 0.0.2</p>
     </b>
 </div>
 
 ## About
-`Monagement`, is a memory allocator project written in rust that is based on the `TLFS` (Two-Level Segregated Fit) concept.
+`Monagement`, is a memory allocator project written in rust that is based on the `TLSF` (Two-Level Segregated Fit) concept.
 
 ## Main Architecture
 ### Two-Level Segregated Fit
 uses a 2-level bitmap hierarchy in searching for empty blocks, thus reducing the need for linear scanning.
+### Bitmap
+use of bitmaps for fast search
 ### Coalescing
 any adjacent free blocks will be automatically merged to reduce fragmentation.
 
-## Announcement
-- In this version, the division on the second level is 4 and cannot be changed.
-- Minimum space for allocator is 4
+## What's New?
+see what's new in version 0.0.2: [version/0.0.2](./version.md)
+
+## Changelog
+[changelog.md](./changelog.md)
 
 ## Start
-### Intallation
+### Installation
+Run the following Cargo command in your project directory:
 ```toml
-[dependencies]
-monagement = { git = "https://github.com/araxnoid-code/monagement.git" }
+cargo add monagement
 ```
-### Start
+Or add the following line to your Cargo.toml:
+```toml
+monagement = "0.0.2"
+```
+
+### Code
 ```rust
-use monagement::Monagement;
+use monagement::{Monagement, MonagementInit};
+use std::num::NonZeroU64;
 
 fn main() {
-    let allocator = Monagement::init(3).expect("Monagement Init Error");
+    let allocator = Monagement::init(MonagementInit::default()).expect("Monagement Init Error");
 
     // allocate memory
-    let allocate_a = allocator.allocate(12).expect("Memory Allocation A Error");
-    let allocate_b = allocator.allocate(20).expect("Memory Allocation B Error");
-    let allocate_c = allocator.allocate(32).expect("Memory Allocation C Error");
+    let allocate_a = allocator
+        .allocate(NonZeroU64::new(12).unwrap())
+        .expect("Memory Allocation A Error");
+    let allocate_b = allocator
+        .allocate(NonZeroU64::new(20).unwrap())
+        .expect("Memory Allocation B Error");
 
     // free up memory
-    allocator.free(allocate_a).expect("Freeing Memory A Error");
+    allocate_a.free();
     // or
-    allocate_b.free().expect("Freeing Memory B Error");
-    // or
-    drop(allocate_c);
+    drop(allocate_b);
 
     // get data link memory
     println!("{:#?}", allocator.borrow_core().get_linked_list());
 }
-
 ```
