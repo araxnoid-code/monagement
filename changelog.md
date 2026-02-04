@@ -4,7 +4,7 @@
   - start, becomes the start of the category and sets the smallest category range. size is based on 2^start. default `2`.
     - example: 
       - `start:2`, then 2^2 then fl_0 will have range 4, 5, 6, 7.
-      - `start:3`, then 2^3 then fl_0 will have sizes 8, 9, 10, 11, 12, 13, 14, 15.
+      - `start:3`, then 2^3 then fl_0 will have range 8, 9, 10, 11, 12, 13, 14, 15.
   - maximum, Determines the maximum capacity and the earliest free node (space) in the category. default `1024`.
   - selector_opt, determines how monagement decides between 2 or more free nodes that have the same category. default `SelectorOpt::DIRECT`
     - SelectorOpt::DIRECT, take the earliest node.
