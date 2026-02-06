@@ -3,7 +3,7 @@
     <b><p>TLSF MEMORY ALLOCATOR</p></b>
     <p>⚙️ under development ⚙️</p>
     <b>
-        <p>Version / 0.0.2</p>
+        <p>Version / 0.0.3</p>
     </b>
 </div>
 
