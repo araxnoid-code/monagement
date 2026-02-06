@@ -35,11 +35,15 @@ impl Monagement {
         Ok(allocated)
     }
 
-    // pub fn free(&self, allocated: Allocated) -> Result<(), String> {
-    //     // allocated.free();
-    //     self.core.borrow_mut().free(&allocated)?;
-    //     Ok(())
-    // }
+    pub unsafe fn allocate_unchecked(
+        &self,
+        size: NonZeroU64,
+    ) -> Result<allocated::Allocated, String> {
+        let mut allocated = self.core.borrow_mut().allocate_unchecke(size)?;
+        allocated.module = Some(self.core.clone());
+
+        Ok(allocated)
+    }
 
     pub fn borrow_core(&self) -> Ref<'_, MonagementCore> {
         self.core.borrow()

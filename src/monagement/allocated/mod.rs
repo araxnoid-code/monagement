@@ -11,6 +11,7 @@ pub struct Allocated {
     pub(crate) start: u64,
     pub(crate) end: u64,
     pub(crate) link: usize,
+    pub(crate) free_unchecked: bool,
 }
 
 impl Allocated {
@@ -25,8 +26,12 @@ impl Allocated {
         self.size
     }
 
-    pub fn get_range(&self) -> (u64, u64) {
+    pub fn get_node_range(&self) -> (u64, u64) {
         (self.start, self.end)
+    }
+
+    pub fn get_range(&self) -> (u64, u64) {
+        (self.start, self.start + self.size)
     }
 
     pub fn get_link(&self) -> usize {
