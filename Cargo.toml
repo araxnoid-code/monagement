@@ -1,6 +1,6 @@
 [package]
 name = "monagement"
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 description = "TLSF Memory Management"
 keywords = ["memory", "allocator", "tlsf", "memory-management", "management"]
