@@ -19,7 +19,7 @@ use of bitmaps for fast search
 any adjacent free blocks will be automatically merged to reduce fragmentation.
 
 ## What's New?
-see what's new in version 0.0.2: [version/0.0.2](./version.md)
+see what's new in version 0.0.3: [version/0.0.3](./version.md)
 
 ## Changelog
 [changelog.md](./changelog.md)
@@ -32,7 +32,7 @@ cargo add monagement
 ```
 Or add the following line to your Cargo.toml:
 ```toml
-monagement = "0.0.2"
+monagement = "0.0.3"
 ```
 
 ### Code
