@@ -1,4 +1,5 @@
 ## version/0.0.3
+6-Feb-2026
 - added `allocate_unchecked` method to allocate memory quickly but unsafely, requiring unsafe block.
 - added `free_unchecked` method to free memory quickly but unsafely, requires unsafe block.
 - To use `free_unchecked`, you must use the method, for example: `a.free_unchecked()`. For `drop(a)`, it will automatically use the `free()` method.
