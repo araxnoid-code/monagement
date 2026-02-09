@@ -60,3 +60,20 @@ fn main() {
     println!("{:#?}", allocator.borrow_core().get_linked_list());
 }
 ```
+
+### Monagement initialization
+```rust
+use monagement::{Monagement, SelectorOpt};
+
+fn main() {
+    let allocator = Monagement::init(monagement::MonagementInit {
+        start: 3, // 2^3
+        maximum: 2048,
+        selector_opt: SelectorOpt::DIRECT, 
+        // SelectorOpt::DIRECT, only takes the first free node from a category (default), 
+        //                      if the free node does not match it will go straight to the next category.
+        // SelectorOpt::SCANNING, perform scanning on a category if there are different 
+        //                        free nodes that have the same category
+    });
+}
+```
